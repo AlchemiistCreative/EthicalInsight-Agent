@@ -1,4 +1,4 @@
-﻿<#
+<#
 
 EthicalInsight Task Script
 
@@ -8,8 +8,8 @@ Author: github.com/AlchemiistCreative
 
 
 param(
-    [string]$APIhost,
-    [string]$path
+    [string]$APIhost = "10.0.0.113:5000",
+    [string]$path= $pwd
 )
 
 $LogFile = "$path\error.log"
@@ -107,8 +107,8 @@ function get-events{
 $EventID = 4720, 4722, 4740, 4725, 4726, 4738
 
 
-$date_ = (Get-Date).AddMinutes(-10)
-$date = (Get-Date).addhours(-1)
+$date = (Get-Date).AddMinutes(-10)
+
 
 
 $Events = Get-WinEvent -FilterHashTable @{Logname = "Security" ; ID = $EventID;} | Where-Object { $_.TimeCreated -gt $date } | Select-Object -Property *
@@ -136,7 +136,7 @@ Message = $Message
 }
 
 
-return $Event_All 
+$Event_All 
 
 
 }
@@ -245,17 +245,19 @@ $headers = @{
 
 
 
-$body = $events_data | ConvertTo-Json 
+$bodies = $events_data 
+
+foreach ($body in $bodies){
 if ($body)
 {
     Try{
-    Invoke-WebRequest -Uri http://$APIhost/api/push/events/$domain -Method POST -Body $body -Headers $headers -ContentType "application/json; charset=utf-8"
+    Invoke-WebRequest -Uri http://$APIhost/api/push/events/$domain -Method POST -Body ($body | ConvertTo-Json) -Headers $headers -ContentType "application/json; charset=utf-8"
     }
     Catch{
     Log-Write -Text "Posting events failed / body: $body / host: $APIhost /domain: $domain"
     }
 }
-
+}
 
 
 
